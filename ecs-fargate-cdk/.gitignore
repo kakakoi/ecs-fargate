@@ -46,3 +46,8 @@ yarn-error.log
 
 /.versionrc.json
 RELEASE_NOTES.md
+
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class

@@ -2,12 +2,20 @@ import * as cdk from '@aws-cdk/core';
 import * as ec2 from '@aws-cdk/aws-ec2';
 import * as iam from '@aws-cdk/aws-iam'
 import * as ecsp from '@aws-cdk/aws-ecs-patterns';
-import * as ecs from '@aws-cdk/aws-ecs'
+import * as ecs from '@aws-cdk/aws-ecs';
+import * as ecr from '@aws-cdk/aws-ecr';
+
 import { TaskDefinition } from '@aws-cdk/aws-ecs';
 
 export class EcsFargateCdkStack extends cdk.Stack {
   constructor(scope: cdk.Construct, id: string, props?: cdk.StackProps) {
     super(scope, id, props);
+
+    // Amazon ECRのリポジトリを指定。事前に作成してpushしておきます。
+    const repository = new ecr.Repository(this, 'fargate-rds-cdk-repo-id', {
+      repositoryName: "fargate-rds-cdk-repo-name",
+      removalPolicy: cdk.RemovalPolicy.DESTROY
+    });
 
     const vpc = new ec2.Vpc(this, 'VPC', { 
       natGateways: 0,
