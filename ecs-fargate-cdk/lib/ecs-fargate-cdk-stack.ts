@@ -17,36 +17,36 @@ export class EcsFargateCdkStack extends cdk.Stack {
       removalPolicy: cdk.RemovalPolicy.DESTROY
     });
 
-    const vpc = new ec2.Vpc(this, 'VPC', { 
-      natGateways: 0,
-      subnetConfiguration: [
-        { cidrMask: 24, subnetType: ec2.SubnetType.PUBLIC, name: 'ingress' }
-      ] });
+    // const vpc = new ec2.Vpc(this, 'VPC', { 
+    //   natGateways: 0,
+    //   subnetConfiguration: [
+    //     { cidrMask: 24, subnetType: ec2.SubnetType.PUBLIC, name: 'ingress' }
+    //   ] });
       
-    const taskIamRole = new iam.Role(this, "AppRole", {
-      roleName: "AppRole",
-      assumedBy: new iam.ServicePrincipal('ecs-tasks.amazonaws.com')
-    });
+    // const taskIamRole = new iam.Role(this, "AppRole", {
+    //   roleName: "AppRole",
+    //   assumedBy: new iam.ServicePrincipal('ecs-tasks.amazonaws.com')
+    // });
 
-    const taskDefinition = new ecs.FargateTaskDefinition(this, 'Task', {
-      taskRole: taskIamRole,
-    })
+    // const taskDefinition = new ecs.FargateTaskDefinition(this, 'Task', {
+    //   taskRole: taskIamRole,
+    // })
 
-    taskDefinition.addContainer('MyContainer', {
-      image: ecs.ContainerImage.fromRegistry('amazon/amazon-ecs-sample'),
-      portMappings: [{ containerPort: 80}],
-      memoryReservationMiB: 256,
-      cpu:256,
-    })
+    // taskDefinition.addContainer('MyContainer', {
+    //   image: ecs.ContainerImage.fromRegistry('amazon/amazon-ecs-sample'),
+    //   portMappings: [{ containerPort: 80}],
+    //   memoryReservationMiB: 256,
+    //   cpu:256,
+    // })
 
-    const service = new ecsp.ApplicationLoadBalancedFargateService(this, 'MyWebServer', {
-      vpc: vpc,
-      taskDefinition: taskDefinition,
-      desiredCount: 1,
-      serviceName: 'MyWebApp',
-      assignPublicIp: true,
-      publicLoadBalancer: true
-    })
+    // const service = new ecsp.ApplicationLoadBalancedFargateService(this, 'MyWebServer', {
+    //   vpc: vpc,
+    //   taskDefinition: taskDefinition,
+    //   desiredCount: 1,
+    //   serviceName: 'MyWebApp',
+    //   assignPublicIp: true,
+    //   publicLoadBalancer: true
+    // })
     // The code that defines your stack goes here
   }
 }
