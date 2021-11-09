@@ -47,6 +47,11 @@ export class RdsStack extends cdk.Stack {
     const params = paramsConfig[stage]
     this.dbParams = params.dbParams
 
+    const secretName: string | undefined = this.node.tryGetContext('secretName')
+    if (secretName == null) {
+      throw Error(`invalid secretDbName: ${secretName}`)
+    }
+
     /*
     const vpc = ec2.Vpc.fromLookup(this, 'vpc', {
       vpcId: params.vpcId,
@@ -72,7 +77,7 @@ export class RdsStack extends cdk.Stack {
     )
 
     this.rdsCredentials = rds.Credentials.fromGeneratedSecret(params.dbParams.username, {
-      secretName: 'rds-db-credentials/ecs-fargate_asset_secret_' + stage
+      secretName: secretName + stage
     });
 
     this.dbInstance = new rds.DatabaseInstance(this, 'db', {
@@ -101,7 +106,7 @@ export class RdsStack extends cdk.Stack {
       storageEncrypted: false,
       storageType: rds.StorageType.GP2,
       vpcSubnets: {
-        subnetType: ec2.SubnetType.PUBLIC
+        subnetType: ec2.SubnetType.PRIVATE_ISOLATED
       }
     });
   }

@@ -5,9 +5,7 @@ import * as ecsp from '@aws-cdk/aws-ecs-patterns';
 import * as ecs from '@aws-cdk/aws-ecs';
 import * as ecr from '@aws-cdk/aws-ecr';
 import * as rds from '@aws-cdk/aws-rds';
-
-import { TaskDefinition } from '@aws-cdk/aws-ecs';
-import { SubnetType } from '@aws-cdk/aws-ec2';
+import * as logs from '@aws-cdk/aws-logs';
 
 interface EcsFargateProps extends cdk.StackProps {
   vpc: ec2.Vpc,
@@ -31,6 +29,10 @@ export class EcsFargateStack extends cdk.Stack {
     if (stage !== 'staging' && stage !== 'production')
       throw Error(`invalid stage: ${stage}`)
 
+    const secret = props.rdsInstance.secret
+    if (secret == undefined)
+      throw Error('rdssecret is undefined')
+
     // Amazon ECRのリポジトリを指定。事前に作成してpushしておきます。
     const repository = new ecr.Repository(this, createResourceName(scope, 'ecr-id'), {
       repositoryName: createResourceName(scope, "ecr-name"),
@@ -48,6 +50,10 @@ export class EcsFargateStack extends cdk.Stack {
       taskRole: taskIamRole,
     });
 
+    const logGroup = new logs.LogGroup(this, 'ServiceLogGroup', {
+      logGroupName: this.node.tryGetContext('serviceName')
+      })
+
     taskDefinition.addContainer(createResourceName(scope, 'container'), {
       image: ecs.ContainerImage.fromAsset('../app'),
       portMappings: [{ containerPort: 80 }],
@@ -62,9 +68,12 @@ export class EcsFargateStack extends cdk.Stack {
         DB_NAME: props.dbParams.name,
       },
       secrets: {
-        // DB_USER: ecs.Secret.fromSecretsManager(usernameSecret),
-        // DB_PW: ecs.Secret.
+        DB_SECRET: ecs.Secret.fromSecretsManager(secret),
       },
+      logging: ecs.LogDriver.awsLogs({
+        streamPrefix: this.node.tryGetContext('systemName'),
+        logGroup,
+      }),
     });
 
     new ecsp.ApplicationLoadBalancedFargateService(this, createResourceName(scope, "alf-id"), {

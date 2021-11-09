@@ -24,8 +24,26 @@ export class NetworkStack extends cdk.Stack {
     this.vpc = new ec2.Vpc(this, 'VPC', { 
         natGateways: 0,
         subnetConfiguration: [
-          { cidrMask: 24, subnetType: ec2.SubnetType.PUBLIC, name: 'ingress' }
+          { cidrMask: 24, subnetType: ec2.SubnetType.PRIVATE_ISOLATED, name: 'ingress' }
         ] });
+
+        this.vpc.addInterfaceEndpoint("ecr-endpoint", {
+          service: ec2.InterfaceVpcEndpointAwsService.ECR
+        })
+        this.vpc.addInterfaceEndpoint("ecr-dkr-endpoint", {
+          service: ec2.InterfaceVpcEndpointAwsService.ECR_DOCKER
+        })
+        this.vpc.addInterfaceEndpoint("logs-endpoint", {
+          service: ec2.InterfaceVpcEndpointAwsService.CLOUDWATCH_LOGS
+        })
+        this.vpc.addGatewayEndpoint("s3-endpoint", {
+          service: ec2.GatewayVpcEndpointAwsService.S3,
+          subnets: [
+            {
+              subnets: this.vpc.isolatedSubnets
+            }
+          ]
+        })
 
     // 踏み台ホストためのセキュリティグループ
     this.bastionSecurityGroup = new ec2.SecurityGroup(this, "bastionSg", {
