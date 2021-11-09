@@ -12,6 +12,12 @@ import { SubnetType } from '@aws-cdk/aws-ec2';
 interface EcsFargateProps extends cdk.StackProps {
   vpc: ec2.Vpc,
   rdsCredentials: rds.Credentials,
+  rdsInstance: rds.DatabaseInstance,
+  dbParams: {
+    name: string,
+    username: string,
+    identifier: string
+  },
 }
 
 export class EcsFargateStack extends cdk.Stack {
@@ -19,6 +25,11 @@ export class EcsFargateStack extends cdk.Stack {
 
   constructor(scope: cdk.Construct, id: string, props: EcsFargateProps) {
     super(scope, id, props);
+
+    // ステージごとの切り替え
+    const stage: string | undefined = this.node.tryGetContext('stage')
+    if (stage !== 'staging' && stage !== 'production')
+      throw Error(`invalid stage: ${stage}`)
 
     // Amazon ECRのリポジトリを指定。事前に作成してpushしておきます。
     const repository = new ecr.Repository(this, createResourceName(scope, 'ecr-id'), {
@@ -30,6 +41,8 @@ export class EcsFargateStack extends cdk.Stack {
       roleName: createResourceName(scope, "AppRoleName"),
       assumedBy: new iam.ServicePrincipal('ecs-tasks.amazonaws.com'),
     });
+    const usernameSecret = props.rdsCredentials.username;
+    const passwordSecret = props.rdsCredentials.password;
 
     const taskDefinition = new ecs.FargateTaskDefinition(this, createResourceName(scope, 'Task'), {
       taskRole: taskIamRole,
@@ -40,17 +53,17 @@ export class EcsFargateStack extends cdk.Stack {
       portMappings: [{ containerPort: 80 }],
       memoryReservationMiB: 256,
       cpu : 256,
-      secrets: {
-
-      },
       environment: {// TODO: https://dev.to/michaelfecher/i-tell-you-a-secret-provide-database-credentials-to-an-ecs-fargate-task-in-aws-cdk-5f4
-        // DB_USER: props.rdsCredentials.username,
-        // DB_PW: props.rdsCredentials.password,
-        // NODE_ENV: "production",
-        // DB_DIALECT: "postgres",
-        // DB_HOST: props.rdsCredentials.,
-        // DB_PORT: props.dbPort,
-        // DB_NAME: props.dbName,
+        NODE_ENV: stage,
+        DB_USER: usernameSecret,
+        DB_DIALECT: "postgres",
+        DB_HOST: props.rdsInstance.instanceEndpoint.hostname,
+        DB_PORT: props.rdsInstance.instanceEndpoint.port.toString(),
+        DB_NAME: props.dbParams.name,
+      },
+      secrets: {
+        // DB_USER: ecs.Secret.fromSecretsManager(usernameSecret),
+        // DB_PW: ecs.Secret.
       },
     });
 

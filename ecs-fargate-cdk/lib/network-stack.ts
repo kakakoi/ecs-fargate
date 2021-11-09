@@ -16,6 +16,11 @@ export class NetworkStack extends cdk.Stack {
   constructor(scope: cdk.Construct, id: string, props?: cdk.StackProps) {
     super(scope, id, props);
 
+    // ステージごとの切り替え
+    const stage: string | undefined = this.node.tryGetContext('stage')
+    if (stage !== 'staging' && stage !== 'production')
+      throw Error(`invalid stage: ${stage}`)
+
     this.vpc = new ec2.Vpc(this, 'VPC', { 
         natGateways: 0,
         subnetConfiguration: [

@@ -31,6 +31,11 @@ interface RdsStackProps extends cdk.StackProps {
 export class RdsStack extends cdk.Stack {
   public dbInstance: rds.DatabaseInstance
   public rdsCredentials: rds.Credentials
+  public dbParams: {
+    name: string,
+    username: string,
+    identifier: string
+  }
 
   constructor(scope: cdk.Construct, id: string, props?: RdsStackProps) {
     super(scope, id, props)
@@ -40,6 +45,7 @@ export class RdsStack extends cdk.Stack {
     if (stage !== 'staging' && stage !== 'production')
       throw Error(`invalid stage: ${stage}`)
     const params = paramsConfig[stage]
+    this.dbParams = params.dbParams
 
     /*
     const vpc = ec2.Vpc.fromLookup(this, 'vpc', {
@@ -97,8 +103,6 @@ export class RdsStack extends cdk.Stack {
       vpcSubnets: {
         subnetType: ec2.SubnetType.PUBLIC
       }
-    })
-
-    this.dbInstance
+    });
   }
 }

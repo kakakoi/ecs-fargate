@@ -24,5 +24,7 @@ const rdsStack = new RdsStack(app, 'RdsStack', {
 const ecsStack = new EcsFargateStack(app, 'EcsFargateStack', {
   vpc: networkStack.vpc,
   rdsCredentials: rdsStack.rdsCredentials,
+  rdsInstance: rdsStack.dbInstance,
+  dbParams: rdsStack.dbParams,
   env: { account: process.env.CDK_DEFAULT_ACCOUNT, region: process.env.CDK_DEFAULT_REGION },
 });
